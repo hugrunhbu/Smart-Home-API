@@ -55,6 +55,95 @@ class SimpleAPIHandler(BaseHTTPRequestHandler):
             self._handle_create_device()
         else:
             self._send_response(404, {'error': 'Not Found'})
+    
+    # Handle DELETE requests
+    def do_DELETE(self):
+        path = self.path.rstrip('/')  # Normalize path
+        if path.startswith('/users/'):
+            user_id = int(path.split('/')[-1])
+            user_to_delete = None
+            for user in users:
+                if user['id'] == user_id:
+                    user_to_delete = user
+                    break
+            if user_to_delete:
+                users.remove(user_to_delete)
+                self._send_response(204)  # 204 No Content
+            else:
+                self._send_response(404, {'error': 'User not found'})
+        elif path.startswith('/houses/'):
+            house_id = int(path.split('/')[-1])
+            house_to_delete = None
+            for house in houses:
+                if house['id'] == house_id:
+                    house_to_delete = house
+                    break
+            if house_to_delete:
+                houses.remove(house_to_delete)
+                self._send_response(204)  # 204 No Content
+            else:
+                self._send_response(404, {'error': 'House not found'})
+        else:
+            self._send_response(404, {'error': 'Not Found'})
+
+    # Handle PUT requests
+    def do_PUT(self):
+        path = self.path.rstrip('/')  # Normalize path
+        if path.startswith('/users/'):
+            user_id = int(path.split('/')[-1])
+            user_to_update = None
+            for user in users:
+                if user['id'] == user_id:
+                    user_to_update = user
+                    break
+            if user_to_update:
+                content_length = int(self.headers['Content-Length'])
+                put_data = self.rfile.read(content_length)
+                try:
+                    data = json.loads(put_data)
+                    # Update user fields
+                    if 'name' in data:
+                        user_to_update['name'] = data['name']
+                    if 'email' in data:
+                        if not self._validate_email(data['email']):
+                            self._send_response(400, {'error': 'Invalid email format'})
+                            return
+                        user_to_update['email'] = data['email']
+                    if 'password' in data:
+                        if not self._validate_password(data['password']):
+                            self._send_response(400, {'error': 'Password must be at least 8 characters long'})
+                            return
+                        user_to_update['password'] = data['password']
+                    self._send_response(200, user_to_update)
+                except json.JSONDecodeError:
+                    self._send_response(400, {'error': 'Invalid JSON'})
+            else:
+                self._send_response(404, {'error': 'User not found'})
+        elif path.startswith('/houses/'):
+            house_id = int(path.split('/')[-1])
+            house_to_update = None
+            for house in houses:
+                if house['id'] == house_id:
+                    house_to_update = house
+                    break
+            if house_to_update:
+                content_length = int(self.headers['Content-Length'])
+                put_data = self.rfile.read(content_length)
+                try:
+                    data = json.loads(put_data)
+                    # Update house fields
+                    if 'name' in data:
+                        house_to_update['name'] = data['name']
+                    if 'address' in data:
+                        house_to_update['address'] = data['address']
+                    self._send_response(200, house_to_update)
+                except json.JSONDecodeError:
+                    self._send_response(400, {'error': 'Invalid JSON'})
+            else:
+                self._send_response(404, {'error': 'House not found'})
+        else:
+            self._send_response(404, {'error': 'Not Found'})
+
 
     def _handle_create_user(self):
         content_length = int(self.headers['Content-Length'])
@@ -156,7 +245,7 @@ class SimpleAPIHandler(BaseHTTPRequestHandler):
             self._send_response(201, device)
         except json.JSONDecodeError:
             self._send_response(400, {'error': 'Invalid JSON'})
-            
+
 # Run the server
 def run(server_class=HTTPServer, handler_class=SimpleAPIHandler, port=8000):
     server_address = ('', port)
