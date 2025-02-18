@@ -74,3 +74,118 @@ def test_create_user_short_password(server):
     response = send_request('POST', '/users', data=user_data)
     assert response.status_code == 400
     assert response.json() == {'error': 'Password must be at least 8 characters long'}
+
+# Test cases for House API
+def test_create_house():
+    # Test creating a house with valid data
+    house_data = {'name': 'My House', 'address': '123 Main St'}
+    response = send_request('POST', '/houses', data=house_data)
+    assert response.status_code == 201
+    assert response.json() == {
+        'id': 1,
+        'name': 'My House',
+        'address': '123 Main St'
+    }
+
+def test_create_house_missing_fields():
+    # Test creating a house with missing fields
+    house_data = {'name': 'My House'}
+    response = send_request('POST', '/houses', data=house_data)
+    assert response.status_code == 400
+    assert response.json() == {'error': 'Missing required fields'}
+
+# Test cases for Room API
+def test_create_room():
+    # Test creating a room with valid data
+    room_data = {'name': 'Living Room', 'houseId': 1}
+    response = send_request('POST', '/rooms', data=room_data)
+    assert response.status_code == 201
+    assert response.json() == {
+        'id': 1,
+        'name': 'Living Room',
+        'houseId': 1
+    }
+
+def test_create_room_missing_fields():
+    # Test creating a room with missing fields
+    room_data = {'name': 'Living Room'}
+    response = send_request('POST', '/rooms', data=room_data)
+    assert response.status_code == 400
+    assert response.json() == {'error': 'Missing required fields'}
+
+def test_create_room_invalid_house():
+    # Test creating a room with an invalid houseId
+    room_data = {'name': 'Living Room', 'houseId': 999}  # Non-existent houseId
+    response = send_request('POST', '/rooms', data=room_data)
+    assert response.status_code == 404
+    assert response.json() == {'error': 'House not found'}
+
+# Test cases for Device API
+def test_create_device():
+    # Test creating a device with valid data
+    device_data = {'name': 'Smart Light', 'type': 'light', 'roomId': 1}
+    response = send_request('POST', '/devices', data=device_data)
+    assert response.status_code == 201
+    assert response.json() == {
+        'id': 1,
+        'name': 'Smart Light',
+        'type': 'light',
+        'roomId': 1
+    }
+
+def test_create_device_missing_fields():
+    # Test creating a device with missing fields
+    device_data = {'name': 'Smart Light', 'type': 'light'}
+    response = send_request('POST', '/devices', data=device_data)
+    assert response.status_code == 400
+    assert response.json() == {'error': 'Missing required fields'}
+
+def test_create_device_invalid_room():
+    # Test creating a device with an invalid roomId
+    device_data = {'name': 'Smart Light', 'type': 'light', 'roomId': 999}  # Non-existent roomId
+    response = send_request('POST', '/devices', data=device_data)
+    assert response.status_code == 404
+    assert response.json() == {'error': 'Room not found'}
+
+# Test cases for GET endpoints
+def test_get_users():
+    # Test retrieving the list of users
+    response = send_request('GET', '/users')
+    assert response.status_code == 200
+    assert response.json() == [{
+        'id': 1,
+        'name': 'John Doe',
+        'email': 'john@example.com',
+        'password': 'password123'
+    }]
+
+def test_get_houses():
+    # Test retrieving the list of houses
+    response = send_request('GET', '/houses')
+    assert response.status_code == 200
+    assert response.json() == [{
+        'id': 1,
+        'name': 'My House',
+        'address': '123 Main St'
+    }]
+
+def test_get_rooms():
+    # Test retrieving the list of rooms
+    response = send_request('GET', '/rooms')
+    assert response.status_code == 200
+    assert response.json() == [{
+        'id': 1,
+        'name': 'Living Room',
+        'houseId': 1
+    }]
+
+def test_get_devices():
+    # Test retrieving the list of devices
+    response = send_request('GET', '/devices')
+    assert response.status_code == 200
+    assert response.json() == [{
+        'id': 1,
+        'name': 'Smart Light',
+        'type': 'light',
+        'roomId': 1
+    }]
