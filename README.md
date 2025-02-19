@@ -2,6 +2,12 @@
 
 First push: Created a simple HTTP server using python's built-in http.server module. it handles GET and POST requests for a /users endpoint, allowing me to add a user (POST request) and retrieve all users (GET request).
 
+# I added a requirements.txt file that has the dependencies
+
+when you git clone this project type:
+pip install -r requirements.txt
+do this inside your virtual environment and all tests should pass.
+
 # test_server.py
 
 What the tests cover:
