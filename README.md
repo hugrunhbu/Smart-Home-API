@@ -39,3 +39,5 @@ What the tests cover:
 5. GET Endpoints
 
 - Retrieving lists of users, houses, rooms, and devices.
+
+(changing readme file to see whether actions is working)
