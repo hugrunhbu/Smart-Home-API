@@ -20,11 +20,20 @@ def send_request(method, path, data=None):
     import requests
     url = f'http://localhost:8000{path}'
     headers = {'Content-Type': 'application/json'}
+    
     if method == 'GET':
         response = requests.get(url, headers=headers)
     elif method == 'POST':
         response = requests.post(url, headers=headers, json=data)
+    elif method == 'DELETE':
+        response = requests.delete(url, headers=headers)
+    elif method == 'PUT':
+        response = requests.put(url, headers=headers, json=data)
+    else:
+        raise ValueError(f"Unsupported HTTP method: {method}")
+    
     return response
+
 
 # Fixture to start and stop the server for each test
 @pytest.fixture(scope="module")
@@ -189,3 +198,128 @@ def test_get_devices():
         'type': 'light',
         'roomId': 1
     }]
+
+    # Test DELETE user
+def test_delete_user(server):
+    response = send_request('DELETE', '/users/1')
+    assert response.status_code == 204  # No Content
+
+    # Verify the user is deleted
+    response = send_request('GET', '/users')
+    assert response.status_code == 200
+    assert response.json() == []
+
+# Test DELETE house
+def test_delete_house(server):
+    response = send_request('DELETE', '/houses/1')
+    assert response.status_code == 204  # No Content
+
+    # Verify the house is deleted
+    response = send_request('GET', '/houses')
+    assert response.status_code == 200
+    assert response.json() == []
+
+# Test DELETE room
+def test_delete_room(server):
+    # Ensure a house exists first
+    house_data = {'name': 'My House', 'address': '123 Main St'}
+    send_request('POST', '/houses', data=house_data)
+
+    # Create a room before trying to delete it
+    room_data = {'name': 'Living Room', 'houseId': 1}
+    send_request('POST', '/rooms', data=room_data)
+
+    # Now delete the room
+    response = send_request('DELETE', '/rooms/1')
+    assert response.status_code == 204  # No Content
+
+    # Verify the room is deleted
+    response = send_request('GET', '/rooms')
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+# Test PUT (UPDATE) user
+def test_update_user(server):
+    # Create a user first
+    user_data = {'name': 'John Doe', 'email': 'john@example.com', 'password': 'password123'}
+    send_request('POST', '/users', data=user_data)
+
+    # Update the user
+    updated_data = {'name': 'John Updated', 'email': 'john.updated@example.com', 'password': 'newpassword123'}
+    response = send_request('PUT', '/users/1', data=updated_data)
+
+    assert response.status_code == 200
+    assert response.json() == {'id': 1, **updated_data}
+
+# Test PUT (UPDATE) house
+def test_update_house(server):
+    # Create a house first
+    house_data = {'name': 'My House', 'address': '123 Main St'}
+    send_request('POST', '/houses', data=house_data)
+
+    # Update the house
+    updated_data = {'name': 'Updated House', 'address': '456 New St'}
+    response = send_request('PUT', '/houses/1', data=updated_data)
+
+    assert response.status_code == 200
+    assert response.json() == {'id': 1, **updated_data}
+
+# Test PUT (UPDATE) room
+def test_update_room(server):
+    # Ensure a house exists first
+    house_data = {'name': 'My House', 'address': '123 Main St'}
+    send_request('POST', '/houses', data=house_data)
+
+    # Create a room before trying to update it
+    room_data = {'name': 'Living Room', 'houseId': 1}
+    send_request('POST', '/rooms', data=room_data)
+
+    # Update the room
+    updated_data = {'name': 'Updated Room'}
+    response = send_request('PUT', '/rooms/1', data=updated_data)
+    
+    assert response.status_code == 200
+    assert response.json() == {'id': 1, 'houseId': 1, **updated_data}
+
+# test to delete device
+def test_delete_device(server):
+    # Ensure a house and room exist first
+    house_data = {'name': 'My House', 'address': '123 Main St'}
+    send_request('POST', '/houses', data=house_data)
+
+    room_data = {'name': 'Living Room', 'houseId': 1}
+    send_request('POST', '/rooms', data=room_data)
+
+    # Create a device before trying to delete it
+    device_data = {'name': 'Smart Light', 'type': 'light', 'roomId': 1}
+    send_request('POST', '/devices', data=device_data)
+
+    # Now delete the device
+    response = send_request('DELETE', '/devices/1')
+    assert response.status_code == 204  # No Content
+
+    # Verify the device is deleted
+    response = send_request('GET', '/devices')
+    assert response.status_code == 200
+    assert response.json() == []
+
+# test to update device
+def test_update_device(server):
+    # Ensure a house and room exist first
+    house_data = {'name': 'My House', 'address': '123 Main St'}
+    send_request('POST', '/houses', data=house_data)
+
+    room_data = {'name': 'Living Room', 'houseId': 1}
+    send_request('POST', '/rooms', data=room_data)
+
+    # Create a device before trying to update it
+    device_data = {'name': 'Smart Light', 'type': 'light', 'roomId': 1}
+    send_request('POST', '/devices', data=device_data)
+
+    # Update the device
+    updated_data = {'name': 'Updated Light', 'type': 'LED'}
+    response = send_request('PUT', '/devices/1', data=updated_data)
+
+    assert response.status_code == 200
+    assert response.json() == {'id': 1, 'roomId': 1, **updated_data}
