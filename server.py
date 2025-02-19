@@ -57,45 +57,57 @@ class SimpleAPIHandler(BaseHTTPRequestHandler):
             self._send_response(404, {'error': 'Not Found'})
     
     # Handle DELETE requests
+        # Handle DELETE requests
     def do_DELETE(self):
         path = self.path.rstrip('/')  # Normalize path
+        
         if path.startswith('/users/'):
             user_id = int(path.split('/')[-1])
-            user_to_delete = None
-            for user in users:
-                if user['id'] == user_id:
-                    user_to_delete = user
-                    break
+            user_to_delete = next((user for user in users if user['id'] == user_id), None)
             if user_to_delete:
                 users.remove(user_to_delete)
-                self._send_response(204)  # 204 No Content
+                self._send_response(204)  # No Content
             else:
                 self._send_response(404, {'error': 'User not found'})
+
         elif path.startswith('/houses/'):
             house_id = int(path.split('/')[-1])
-            house_to_delete = None
-            for house in houses:
-                if house['id'] == house_id:
-                    house_to_delete = house
-                    break
+            house_to_delete = next((house for house in houses if house['id'] == house_id), None)
             if house_to_delete:
                 houses.remove(house_to_delete)
-                self._send_response(204)  # 204 No Content
+                self._send_response(204)  # No Content
             else:
                 self._send_response(404, {'error': 'House not found'})
+
+        elif path.startswith('/rooms/'):
+            room_id = int(path.split('/')[-1])
+            room_to_delete = next((room for room in rooms if room['id'] == room_id), None)
+            if room_to_delete:
+                rooms.remove(room_to_delete)
+                self._send_response(204)  # No Content
+            else:
+                self._send_response(404, {'error': 'Room not found'})
+
+        elif path.startswith('/devices/'):
+            device_id = int(path.split('/')[-1])
+            device_to_delete = next((device for device in devices if device['id'] == device_id), None)
+            if device_to_delete:
+                devices.remove(device_to_delete)
+                self._send_response(204)  # No Content
+            else:
+                self._send_response(404, {'error': 'Device not found'})
+
         else:
             self._send_response(404, {'error': 'Not Found'})
 
-    # Handle PUT requests
+
+       # Handle PUT requests (updates)
     def do_PUT(self):
         path = self.path.rstrip('/')  # Normalize path
+
         if path.startswith('/users/'):
             user_id = int(path.split('/')[-1])
-            user_to_update = None
-            for user in users:
-                if user['id'] == user_id:
-                    user_to_update = user
-                    break
+            user_to_update = next((user for user in users if user['id'] == user_id), None)
             if user_to_update:
                 content_length = int(self.headers['Content-Length'])
                 put_data = self.rfile.read(content_length)
@@ -119,13 +131,10 @@ class SimpleAPIHandler(BaseHTTPRequestHandler):
                     self._send_response(400, {'error': 'Invalid JSON'})
             else:
                 self._send_response(404, {'error': 'User not found'})
+
         elif path.startswith('/houses/'):
             house_id = int(path.split('/')[-1])
-            house_to_update = None
-            for house in houses:
-                if house['id'] == house_id:
-                    house_to_update = house
-                    break
+            house_to_update = next((house for house in houses if house['id'] == house_id), None)
             if house_to_update:
                 content_length = int(self.headers['Content-Length'])
                 put_data = self.rfile.read(content_length)
@@ -141,6 +150,47 @@ class SimpleAPIHandler(BaseHTTPRequestHandler):
                     self._send_response(400, {'error': 'Invalid JSON'})
             else:
                 self._send_response(404, {'error': 'House not found'})
+
+        elif path.startswith('/rooms/'):
+            room_id = int(path.split('/')[-1])
+            room_to_update = next((room for room in rooms if room['id'] == room_id), None)
+            if room_to_update:
+                content_length = int(self.headers['Content-Length'])
+                put_data = self.rfile.read(content_length)
+                try:
+                    data = json.loads(put_data)
+                    # Update room fields
+                    if 'name' in data:
+                        room_to_update['name'] = data['name']
+                    if 'houseId' in data:
+                        room_to_update['houseId'] = data['houseId']
+                    self._send_response(200, room_to_update)
+                except json.JSONDecodeError:
+                    self._send_response(400, {'error': 'Invalid JSON'})
+            else:
+                self._send_response(404, {'error': 'Room not found'})
+
+        elif path.startswith('/devices/'):
+            device_id = int(path.split('/')[-1])
+            device_to_update = next((device for device in devices if device['id'] == device_id), None)
+            if device_to_update:
+                content_length = int(self.headers['Content-Length'])
+                put_data = self.rfile.read(content_length)
+                try:
+                    data = json.loads(put_data)
+                    # Update device fields
+                    if 'name' in data:
+                        device_to_update['name'] = data['name']
+                    if 'type' in data:
+                        device_to_update['type'] = data['type']
+                    if 'roomId' in data:
+                        device_to_update['roomId'] = data['roomId']
+                    self._send_response(200, device_to_update)
+                except json.JSONDecodeError:
+                    self._send_response(400, {'error': 'Invalid JSON'})
+            else:
+                self._send_response(404, {'error': 'Device not found'})
+
         else:
             self._send_response(404, {'error': 'Not Found'})
 
