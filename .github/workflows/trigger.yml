@@ -1,0 +1,17 @@
+name: Trigger Class Repo Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  trigger_class_repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger workflow in class repo
+        run: |
+          curl -X POST -H "Accept: application/vnd.github.everest-preview+json" \
+               -H "Authorization: token ${{ secrets.CLASS_REPO_PAT }}" \
+               --data '{"event_type": "run-smart-home-actions"}' \
+               https://api.github.com/repos/class-account/work-with-actions-hugrunhbu/dispatches
